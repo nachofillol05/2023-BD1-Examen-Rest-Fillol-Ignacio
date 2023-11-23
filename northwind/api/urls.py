@@ -16,26 +16,9 @@ urlpatterns = [
     path('Orders/', views.orders, name='Orders'),
     path('Orders/<int:pk>', views.orders_id, name='Ordersbyid'),
     path('OrderDetails/', views.orderdetails, name='OrderDetails'),
-    path('OrderDetails/<int:pk>', views.orderdetails_id, name='OrderDetailsbyid'),
+    path('OrderDetails/<int:pk>/<int:pk2>', views.orderdetails_id, name='OrderDetailsbyid'),
     path('Products/', views.products, name='Products'),
     path('Products/<int:pk>', views.products_id, name='Productsbyid'),
+    path('ejemplo1/',views.ejemplo1,name='ejemplo1')
     
 ]
-"""path('CustomerDemographics/', views.customerdemographics_all, name='CustomerDemographics'),
-    path('CustomerDemographics/<str:pk>', views.customerdemographics_id, name='CustomerDemographicsbyid'),
-    
-    path('Region/', views.region_all, name='Region'),
-    path('Region/<str:pk>', views.region_id, name='Regionbyid'),
-    
-    path('Shippers/', views.shippers_all, name='Shippers'),
-    path('Shippers/<str:pk>', views.shippers_id, name='Shippersbyid'),
-    
-    
-    
-    path('Territories/', views.territories_all, name='Territories'),
-    path('Territories/<str:pk>', views.territories_id, name='Territoriesbyid'),
-    
-    path('EmployeeTerritories/', views.employeeterritories_all, name='EmployeeTerritories'),
-    path('EmployeeTerritories/<str:pk>', views.employeeterritories_id, name='EmployeeTerritoriesbyid'),
-    path('CustomerCustomerDemo/', views.customercustomerdemo_all, name='CustomerCustomerDemo'),
-    path('CustomerCustomerDemo/<str:pk>', views.customercustomerdemo_id, name='CustomerCustomerDemobyid'),"""

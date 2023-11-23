@@ -2,18 +2,12 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from api.models import *
 
-class SerializerPadre(ModelSerializer):
-    class Meta:
-        fields = '__all__'
 
-class CustomerSerializer(SerializerPadre):
+class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customers
         fields = '__all__'
         
-
-
-
 class SuppliersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suppliers
@@ -67,3 +61,10 @@ class OrderdetailsSerializer(serializers.ModelSerializer):
         model = Orderdetails
         fields = '__all__'
     
+class Punto1Serializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    nombre = serializers.CharField()
+    apellido = serializers.CharField()
+    reportsto = EmployeeSerializer(many=False,required=False)
+    nacimiento = serializers.DateTimeField()
+    salario = serializers.IntegerField()

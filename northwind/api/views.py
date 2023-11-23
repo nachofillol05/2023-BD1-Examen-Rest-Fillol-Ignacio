@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -8,7 +9,8 @@ from .models import (
 )
 from .serializer import (
     OrderdetailsSerializer, SuppliersSerializer,CustomerSerializer,
-    CategorySerializer, EmployeeSerializer, OrderSerializer, ProductSerializer
+    CategorySerializer, EmployeeSerializer, OrderSerializer, ProductSerializer,
+    Punto1Serializer
 )
 from .serializer import CustomerSerializer
 from api.services.CustomerService import CustomerService
@@ -249,9 +251,9 @@ def orderdetails(request):
         return Response(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def orderdetails_id(request, pk):
+def orderdetails_id(request, pk,pk2):
     try:
-        orderdetail = Orderdetails.objects.get(orderdetailid=pk)
+        orderdetail = Orderdetails.objects.get(orderid=pk,productid=pk2)
     except Orderdetails.DoesNotExist:
         return Response({"message": "No existe el detalle de orden"}, status=status.HTTP_204_NO_CONTENT)
 
@@ -296,31 +298,34 @@ def employees_id(request, pk):
     if request.method == 'GET':
         serialized = EmployeeSerializer(employee)
         return Response(serialized.data, status=status.HTTP_200_OK)
-    
-"""def punto1(request):
-    
-    
-    #mostrar los clientes que su apellido comiencen con la letra "a" y la condicion iva sea responsable incripto, mostrar su apellido, id y descripcion condicion iva
+@api_view(['GET'])
+def ejemplo1(request):
     if request.method == 'GET':
-        mayorQue = int(request.query_params.get('mayorQue'))#recibe el parametro desde el postman
+        fecha = request.query_params.get('mayorquefecha')
+        try:
+            fecha = datetime.datetime.strptime(fecha, '%Y-%m-%d').date()
+        except ValueError:
+            fecha = None
         letra = request.query_params.get('letra')
-        #clientes = Clientes.objects.all().values("cod_cliente")#SELECT COD_CLIENTE FROM CLIENTES con serializador personalizado
-        #clientes = Clientes.objects.filter(apellido__startswith=letra).filter(cod_condicion_iva__descripcion="RESPONSABLE INSCRIPTO")#SELECT COD_CLIENTE FROM CLIENTES where apellido starts a
-        #fechas exclude(date__gt = datetime.date(2005-1-3) EL GT ES GREATER THAN
-        clientes = service.filtroPunto1(letra=letra,condicion="RESPONSABLE INSCRIPTO")
+        employees = Employees.objects.filter(birthdate__lt=fecha).filter(lastname__contains = letra).filter(reportsto__lastname__contains = letra)
         resultados = []
-        for cliente in clientes:
-            if cliente.esMayor(mayorQue):
-                service.update_telefono(id=cliente.cod_cliente, telefono=request.data['telefono'])
-                resultado = { #creas un diccionario para cambiar de nombre los atributos o hacer una estructura para que se muestren los datos
-                            "id":cliente.cod_cliente,
-                            "apellido":cliente.apellido,
-                            "nombre":cliente.nombre,
-                            "telefono":cliente.telefono,
-                            "telefonoNuevo":request.data['telefono'],
-                            "descripcionIva":cliente.cod_condicion_iva.descripcion #descripcion iva
-                            }
-                
-                resultados.append(resultado)
+        for employee in employees:
+            employee.salary = request.data['salario']
+            employee.save()
+            resultado = { 
+                        "id":employee.employeeid,
+                        "nombre": employee.firstname,
+                        "apellido":employee.lastname,
+                        "reportsto":employee.reportsto,
+                        "nacimiento":employee.birthdate,
+                        "salario":employee.salary
+                        }
+            
+            resultados.append(resultado)
         serializados = Punto1Serializer(resultados, many=True)#creas un serializador nuevo para que tenga solo los atributos que le queres pasar, en este caso "cod_cliente","nombre","apellido"
-        return Response(serializados.data)"""
+        return Response(serializados.data)
+@api_view(['GET'])
+def hola(request):
+    employees = Employees.objects.filter(birthdate__lt = datetime.date(1950,1,3))
+    serialized = EmployeeSerializer(employees, many=True)
+    return Response(serialized.data)
