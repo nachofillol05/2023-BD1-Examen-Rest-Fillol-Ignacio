@@ -4,17 +4,19 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from .models import (
-    Orderdetails, Suppliers, Categories, 
+    Orderdetails, Shippers, Suppliers, Categories, 
     Employees, Orders, Products, Customers
 )
 from .serializer import (
     OrderdetailsSerializer, SuppliersSerializer,CustomerSerializer,
     CategorySerializer, EmployeeSerializer, OrderSerializer, ProductSerializer,
-    Punto1Serializer
+    Punto1Serializer,Ejemplo2Serializer,ejemplo1Serializer
 )
 from .serializer import CustomerSerializer
 from api.services.CustomerService import CustomerService
+from api.services.punto1Service import punto1Service
 
+punto1service = punto1Service()
 customerservice = CustomerService()
 
 # Create your views here.
@@ -310,22 +312,154 @@ def ejemplo1(request):
         employees = Employees.objects.filter(birthdate__lt=fecha).filter(lastname__contains = letra).filter(reportsto__lastname__contains = letra)
         resultados = []
         for employee in employees:
-            employee.salary = request.data['salario']
-            employee.save()
+            
             resultado = { 
                         "id":employee.employeeid,
                         "nombre": employee.firstname,
                         "apellido":employee.lastname,
-                        "reportsto":employee.reportsto,
                         "nacimiento":employee.birthdate,
-                        "salario":employee.salary
+                        "salarioanterior":employee.salary,
+                        "salario":request.data['salario']
                         }
-            
+            print('trabo1')
             resultados.append(resultado)
-        serializados = Punto1Serializer(resultados, many=True)#creas un serializador nuevo para que tenga solo los atributos que le queres pasar, en este caso "cod_cliente","nombre","apellido"
+            employee.salary = float(request.data['salario'])
+            print(employee.salary)
+            try:
+                print("Antes de guardar el empleado")
+                employee.save()
+                print("Después de guardar el empleado")
+            except Exception as e:
+                print(f"Error al guardar el empleado: {e}")
+           
+        serializados = ejemplo1Serializer(resultados, many=True)#creas un serializador nuevo para que tenga solo los atributos que le queres pasar, en este caso "cod_cliente","nombre","apellido"
         return Response(serializados.data)
 @api_view(['GET'])
 def hola(request):
     employees = Employees.objects.filter(birthdate__lt = datetime.date(1950,1,3))
     serialized = EmployeeSerializer(employees, many=True)
     return Response(serialized.data)
+
+
+@api_view(["GET"])
+def ejemplo2(request):
+    letra = request.query_params.get("letter")
+    year = request.query_params.get("year")
+
+    empleadosFiltrados = Employees.objects.filter(firstnameicontains = letra, birthdateyear__gte = year)
+    resultados = []
+    for e in empleadosFiltrados:
+        resultado = {
+            "id" : e.employeeid,
+            "nombre" : e.firstname,
+            "apellido" : e.lastname,
+            "birthdate" : e.birthdate,
+            "country" : e.country,
+            "newCountry" : request.query_params.get("newCountry"),
+        }
+        resultados.append(resultado)
+        e.country = request.query_params.get("newCountry")
+        e.save()
+
+    serializados = Ejemplo2Serializer(resultados, many=True)
+    return Response(serializados.data)
+
+@api_view(["GET"])
+def punto1(request):
+    supplierid = request.query_params.get("supplierid")
+    categoryid = request.query_params.get("categoryid")
+    stockmin = int(request.query_params.get("stockmin"))
+
+    #productos = punto1service.getProductsFilter(supplierid,categoryid)
+    productos = Products.objects.filter(categoryid=categoryid).filter(supplierid=supplierid)
+    try:
+        supplier = Suppliers.objects.get(supplierid= supplierid)
+        category = Categories.objects.get(categoryid= categoryid)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    print(supplierid,categoryid)
+    print(productos)
+    if productos:
+        resultados = []
+        for producto in productos:
+            stockfuturo = producto.stockFuturo()
+            print('calc',stockfuturo)
+            if stockfuturo>stockmin and producto.discontinued != 1:
+                
+                resultado = {
+                "ProductId" : producto.productid,
+                "ProductName" : producto.productname,
+                "stockFuturo" : stockfuturo,
+                "UnitPrice" : producto.unitprice
+            }
+                resultados.append(resultado)
+                
+        """for i in range(len(resultado)-1):
+            for k in range(len(resultado)-i-1):
+                if resultados[k].stockFuturo<resultados[k+1].stockFuturo:
+                    resultados[k], resultados[k+1] = resultados[k+1],resultados[k]"""
+        serializados = Punto1Serializer(resultados, many=True)
+        return Response(serializados.data,status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+            
+            
+            
+@api_view(["POST"])
+def punto2(request):
+    supplierid = request.query_params.get("supplierid")
+    categoryid = request.query_params.get("categoryid")
+    stockmin = int(request.query_params.get("stockmin"))
+    
+    
+    customerid = request.data["CustomerID"]
+    employeeid = request.data["EmployeeID"]
+    shipperid = request.data["ShipperID"]
+    
+    try:
+        supplier = Suppliers.objects.get(supplierid= supplierid)
+        category = Categories.objects.get(categoryid= categoryid)
+        ShipperID = Shippers.objects.get(shipperid= shipperid)
+        EmployeeID = Employees.objects.get(employeeid= employeeid)
+        CustomerID = Customers.objects.get(customerid= customerid)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    productos = Products.objects.filter(categoryid=categoryid).filter(supplierid=supplierid)
+    print(supplierid,categoryid)
+    if productos != None:
+        resultados = []
+        for producto in productos:
+            stockfuturo = producto.stockFuturo()
+            if stockfuturo<stockmin:
+                resultados.append(producto)
+                
+            
+            cantidad = stockfuturo - stockmin
+            print(cantidad)
+            customer = Customers.objects.get(customerid=customerid)
+            lastOrder = Orders.objects.all()
+            last = len(lastOrder)
+            neworder =  Orders(last,customer.customerid,employeeid,datetime.datetime.now(),datetime.datetime.now(),datetime.datetime.now(),shipperid,0,customer.address,customer.city,customer.region,customer.postalcode,customer.country)#datos direccion cliente
+            neworder.save()
+            print('creado', neworder)
+            orders = []
+            for i in range(cantidad):
+                if cantidad<100:
+                    descuento = 0
+                else:
+                    descuento = 0.10
+
+                neworderdetail = Orderdetails(last,producto.productid,producto.unitprice,cantidad,descuento)
+                neworderdetail.save()
+                orders.append(neworderdetail)
+                
+                print('creado', neworderdetail)
+            #pedidoserializado = OrderSerializer(neworder, many=False)
+            detallesSerializados=OrderdetailsSerializer(orders, many=True)
+            return Response(detallesSerializados.data,status=status.HTTP_200_OK)
+        
+
+                
+                #crear una order detail
+        

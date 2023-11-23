@@ -41,9 +41,6 @@ class ShipperSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class OrderSerializer(serializers.ModelSerializer):
-    customerid = CustomerSerializer(many=False,required=False)
-    employeeid = EmployeeSerializer(many=False,required=False)
-    shipvia = ShipperSerializer(many=False,required=False)
     class Meta:
         model = Orders
         fields = '__all__'
@@ -57,14 +54,31 @@ class ProductSerializer(serializers.ModelSerializer):
         
 class OrderdetailsSerializer(serializers.ModelSerializer):
     productid = ProductSerializer(many=False,required=False)
+    orderid = OrderSerializer(many=False,required=False)
     class Meta:
         model = Orderdetails
         fields = '__all__'
     
-class Punto1Serializer(serializers.Serializer):
+class ejemplo1Serializer(serializers.Serializer):
     id = serializers.IntegerField()
     nombre = serializers.CharField()
     apellido = serializers.CharField()
     reportsto = EmployeeSerializer(many=False,required=False)
     nacimiento = serializers.DateTimeField()
+    salarioanterior = serializers.IntegerField()
     salario = serializers.IntegerField()
+    
+class Ejemplo2Serializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    nombre = serializers.CharField()
+    apellido = serializers.CharField()
+    birthdate = serializers.DateTimeField()
+    country = serializers.CharField()
+    newCountry = serializers.CharField()
+    
+class Punto1Serializer(serializers.Serializer):
+    ProductId = serializers.IntegerField()
+    ProductName = serializers.CharField()
+    stockFuturo = serializers.IntegerField()
+    UnitPrice = serializers.IntegerField()
+    

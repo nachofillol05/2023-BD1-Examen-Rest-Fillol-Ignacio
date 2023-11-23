@@ -83,6 +83,9 @@ DATABASES = {
         'PASSWORD': 'pepe1234',
         'HOST': 'localhost',
         'PORT': '',
+        'OPTIONS': {
+            'connect_timeout': 45,
+        },
     }
 }
 

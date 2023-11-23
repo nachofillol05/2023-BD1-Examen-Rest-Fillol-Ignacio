@@ -150,6 +150,9 @@ class Products(models.Model):
     class Meta:
         managed = False
         db_table = 'Products'
+        
+    def stockFuturo(self):
+        return (self.unitsinstock + self.unitsonorder)
 
 
 class Region(models.Model):
